@@ -69,6 +69,109 @@ body {
   opacity: 0.7;
 }
 
+/* ── Data Strip ─────────────────────────────────────────────────────────── */
+.data-strip {
+  background: var(--surface);
+  border-top: 1px solid rgba(201, 168, 76, 0.12);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.12);
+  padding: 2.75rem 2rem;
+}
+
+.data-strip__inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1.5rem 0;
+}
+
+.data-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 2.25rem;
+}
+
+.data-stat__value {
+  font-size: clamp(1.75rem, 3vw, 2.4rem);
+  font-weight: 300;
+  color: var(--gold);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.data-stat__label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 0.45rem;
+  white-space: nowrap;
+}
+
+.data-strip__divider {
+  width: 1px;
+  height: 2.25rem;
+  background: rgba(201, 168, 76, 0.15);
+  flex-shrink: 0;
+}
+
+/* ── Key Findings ────────────────────────────────────────────────────────── */
+.findings {
+  padding: 5rem 2rem;
+  background: var(--bg);
+}
+
+.findings__inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.section-eyebrow {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 3rem;
+}
+
+.finding {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 2rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.finding:last-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.finding__label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(201, 168, 76, 0.65);
+}
+
+.finding__body {
+  font-size: 0.9375rem;
+  font-weight: 300;
+  line-height: 1.75;
+  color: rgba(240, 240, 240, 0.75);
+}
+
+.finding__body strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
 /* ── Sponsors Footer ─────────────────────────────────────────────────────── */
 .sponsors {
   display: flex;
@@ -328,6 +431,12 @@ body {
 }
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .data-strip__divider { display: none; }
+  .data-strip__inner { gap: 1.25rem; }
+  .data-stat { padding: 0 1rem; min-width: 30%; }
+}
+
 @media (max-width: 480px) {
   .chat-panel {
     right: 0.75rem;
