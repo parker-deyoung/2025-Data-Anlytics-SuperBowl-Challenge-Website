@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 </head>
 
 <body>
@@ -76,6 +77,49 @@
     </div>
   </section>
 
+  <!-- ── Interactive Charts ── -->
+  <section class="charts">
+    <div class="charts__inner">
+      <span class="section-eyebrow">Data Visualizations</span>
+
+      <div class="charts__grid">
+
+        <!-- Brand Efficiency — full width -->
+        <div class="chart-card chart-card--wide">
+          <p class="chart-card__label">Brand Efficiency — Avg Weighted Engagement Score per Tweet</p>
+          <div class="chart-card__wrap chart-card__wrap--tall">
+            <canvas id="chartBrandEfficiency"></canvas>
+          </div>
+        </div>
+
+        <!-- Tweet Timing -->
+        <div class="chart-card">
+          <p class="chart-card__label">Tweet Timing — 88.6% Concentrated in One Hour</p>
+          <div class="chart-card__wrap">
+            <canvas id="chartTiming"></canvas>
+          </div>
+        </div>
+
+        <!-- Celebrity Flop -->
+        <div class="chart-card">
+          <p class="chart-card__label">The Celebrity Flop — Avg WES by Content Type</p>
+          <div class="chart-card__wrap">
+            <canvas id="chartCelebrity"></canvas>
+          </div>
+        </div>
+
+        <!-- Yell Index — full width -->
+        <div class="chart-card chart-card--wide">
+          <p class="chart-card__label">The Yell Index — Avg Likes: ALL-CAPS vs. Normal-Case Tweets</p>
+          <div class="chart-card__wrap">
+            <canvas id="chartYell"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- ── Sponsors Footer ── -->
   <footer class="sponsors">
     <p class="sponsors__label">Thank you to our sponsors</p>
@@ -127,6 +171,7 @@
   </aside>
 
   <script src="js/main.js"></script>
+  <script src="js/charts.js"></script>
 </body>
 
 </html>
