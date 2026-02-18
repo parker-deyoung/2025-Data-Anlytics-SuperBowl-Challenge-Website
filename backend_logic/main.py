@@ -2,6 +2,7 @@ import os
 import re
 import ast
 import asyncio
+from collections import Counter
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -30,6 +31,9 @@ SCHEMA_INFO: dict = {}
 CODE_MODEL = None
 FORMAT_MODEL = None
 
+# Max code-gen retries before falling back to a graceful error message
+_MAX_RETRIES = 2
+
 
 # ── System prompt builder ─────────────────────────────────────────────────────
 def _build_code_system_prompt() -> str:
@@ -47,31 +51,101 @@ The DataFrame contains {ROW_COUNT:,} tweets about Super Bowl LX (2026) advertise
 ## Tweet Types (column `tweet_type`): original, quote, reply, retweet
 
 ## Boolean columns: is_retweet, is_spam, is_possible_copypasta, has_media, is_reply
-(These are Polars Boolean dtype — filter with pl.col("x") == True or .filter(pl.col("x")))
+(Polars Boolean dtype — filter with pl.col("x") == True or just .filter(pl.col("x")))
 
 ## Key numeric columns
 public_metrics.retweet_count, public_metrics.like_count, public_metrics.reply_count,
 public_metrics.quote_count, public_metrics.impression_count, public_metrics.bookmark_count,
 emoji_count, mention_count, hashtag_count, url_count, media_count
 
+## Text columns
+- `text`       — raw tweet text (may contain HTML entities, URLs)
+- `text_clean` — cleaned tweet text (use this for keyword searches)
+- `text_no_emoji` — cleaned text with emojis stripped
+
+## Emoji column
+- `emoji_list` — string like "['🔥', '🏈']" listing emojis found in the tweet
+- `emoji_count` — integer count of emojis in the tweet
+
+## Pre-injected helpers (no import needed)
+- `pl`      — polars module
+- `df`      — the DataFrame
+- `re`      — Python re module (for regex operations on strings)
+- `Counter` — collections.Counter (for frequency counting)
+Standard Python builtins: len, str, int, float, bool, list, dict, tuple, set, sorted,
+round, min, max, sum, abs, any, all, range, enumerate, zip, map, filter, isinstance,
+next, iter, type, hasattr, getattr, True, False, None
+
 ## Instructions
 When given a user question, respond with ONLY raw Python code — no markdown fences, no explanation.
 The code must:
 1. Use the existing `df` variable (polars.DataFrame) — never re-read the CSV
 2. Define a variable named `result` containing a string, number, list, or dict
-3. Use only polars operations — `pl` and `df` are the only available names
-4. Contain NO import statements
+3. Use only the injected names listed above — no import statements
+4. Handle nulls and edge cases (use .fill_null(0), .drop_nulls(), guard against empty results)
 
 ## Examples
+
+### Simple count
 User: How many tweets did Pepsi get?
 result = df.filter(pl.col("brand").str.starts_with("Pepsi")).shape[0]
 
+### Top brands by metric (null-safe)
 User: Which brand had the most likes?
-top = df.group_by("brand").agg(pl.col("public_metrics.like_count").sum().alias("total_likes")).sort("total_likes", descending=True).head(1)
-result = top.to_dicts()[0]
+result = (
+    df
+    .with_columns(pl.col("public_metrics.like_count").fill_null(0).alias("likes"))
+    .group_by("brand")
+    .agg(pl.col("likes").sum())
+    .sort("likes", descending=True)
+    .head(5)
+    .to_dicts()
+)
 
+### Percentage
 User: What percentage of tweets were retweets?
 result = round(df.filter(pl.col("is_retweet") == True).shape[0] / df.shape[0] * 100, 2)
+
+### Keyword search (use text_clean, not "content")
+User: How many tweets mention the word "funny"?
+result = df.filter(pl.col("text_clean").str.contains(r"(?i)\bfunny\b")).shape[0]
+
+### Emoji frequency for a brand (using emoji_list column + Counter)
+User: What are the top emojis used in Doritos tweets?
+rows = (
+    df
+    .filter(pl.col("brand").str.starts_with("Doritos"))
+    .filter(pl.col("emoji_count") > 0)
+    .select("emoji_list")
+    .to_series()
+    .drop_nulls()
+    .to_list()
+)
+counts = Counter()
+for row in rows:
+    if row:
+        for part in row.strip("[]").split(","):
+            e = part.strip().strip("'\" ")
+            if e:
+                counts[e] += 1
+result = counts.most_common(5)
+
+### Handling no-match gracefully
+User: How many tweets are about BrandX?
+filtered = df.filter(pl.col("brand") == "BrandX_1")
+result = filtered.shape[0] if filtered.shape[0] > 0 else 0
+
+### Complex cleaning with temporary columns
+User: Which brand's tweets have the most media on average?
+result = (
+    df
+    .with_columns(pl.col("media_count").fill_null(0).alias("media"))
+    .group_by("brand")
+    .agg(pl.col("media").mean().round(2).alias("avg_media"))
+    .sort("avg_media", descending=True)
+    .head(5)
+    .to_dicts()
+)
 """
 
 
@@ -89,11 +163,11 @@ async def lifespan(app: FastAPI):
     system_prompt = _build_code_system_prompt()
 
     CODE_MODEL = genai.GenerativeModel(
-        "gemini-2.5-flash",
+        "gemini-2.0-flash",
         system_instruction=system_prompt,
     )
     FORMAT_MODEL = genai.GenerativeModel(
-        "gemini-2.5-flash",
+        "gemini-2.0-flash",
         system_instruction=(
             "You are a friendly data analyst assistant. Given a user question and a raw query result, "
             "write a clear, concise 1-3 sentence answer in natural language. "
@@ -126,11 +200,21 @@ _FORBIDDEN_RE = re.compile(
 )
 
 _SAFE_BUILTINS = {
-    "len": len, "str": str, "int": int, "float": float, "bool": bool,
+    # Types
+    "str": str, "int": int, "float": float, "bool": bool,
     "list": list, "dict": dict, "tuple": tuple, "set": set,
-    "round": round, "min": min, "max": max, "sum": sum, "abs": abs,
+    # Numeric
+    "len": len, "round": round, "min": min, "max": max, "sum": sum, "abs": abs,
+    # Iteration
     "sorted": sorted, "enumerate": enumerate, "zip": zip, "range": range,
-    "True": True, "False": False, "None": None, "print": print,
+    "any": any, "all": all, "next": next, "iter": iter,
+    "map": map, "filter": filter,
+    # Introspection
+    "isinstance": isinstance, "type": type, "hasattr": hasattr, "getattr": getattr,
+    # Constants
+    "True": True, "False": False, "None": None,
+    # Debug
+    "print": print,
 }
 
 _BLOCKED_AST_NODES = (ast.Import, ast.ImportFrom, ast.Global, ast.Nonlocal, ast.Delete)
@@ -153,7 +237,13 @@ def execute_safe(code: str, dataframe: pl.DataFrame):
         if isinstance(node, _BLOCKED_AST_NODES):
             return ValueError(f"Disallowed statement type: {type(node).__name__}")
 
-    namespace: dict = {"__builtins__": _SAFE_BUILTINS, "pl": pl, "df": dataframe}
+    namespace: dict = {
+        "__builtins__": _SAFE_BUILTINS,
+        "pl": pl,
+        "df": dataframe,
+        "re": re,           # injected — no import needed in generated code
+        "Counter": Counter, # injected — no import needed in generated code
+    }
     try:
         exec(compile(tree, "<gemini>", "exec"), namespace)  # noqa: S102
     except Exception as e:
@@ -175,6 +265,15 @@ def _strip_fences(text: str) -> str:
     text = re.sub(r"^```(?:python)?\s*\n?", "", text.strip(), flags=re.IGNORECASE)
     text = re.sub(r"\n?```\s*$", "", text.strip())
     return text.strip()
+
+
+def _truncate_result(value, max_rows: int = 30):
+    """Cap large results before sending to FORMAT_MODEL to avoid token overflow."""
+    if isinstance(value, list) and len(value) > max_rows:
+        return value[:max_rows] + [f"... ({len(value):,} total items)"]
+    if isinstance(value, str) and len(value) > 4000:
+        return value[:4000] + f"... (truncated, {len(value):,} total chars)"
+    return value
 
 
 # ── Request / Response models ─────────────────────────────────────────────────
@@ -202,41 +301,62 @@ async def chat(req: ChatRequest):
     if not message:
         raise HTTPException(400, "Message cannot be empty.")
 
-    # ── Step 1: Generate Polars code ─────────────────────────────────────────
-    try:
-        code_resp = await asyncio.to_thread(
-            CODE_MODEL.generate_content,
-            f"User question: {message}",
-        )
-        raw_code = _strip_fences(code_resp.text)
-    except Exception as e:
-        raise HTTPException(502, f"Code generation failed: {e}")
+    # ── Code generation with auto-retry on failure ────────────────────────────
+    code: str | None = None
+    result_value = None
+    last_error: str | None = None
 
-    # ── Step 2: Execute safely ────────────────────────────────────────────────
-    result_value = execute_safe(raw_code, df)
+    for attempt in range(_MAX_RETRIES + 1):
+        if attempt == 0:
+            prompt = f"User question: {message}"
+        else:
+            print(f"[retry {attempt}] Feeding error back to CODE_MODEL: {last_error[:120]}")
+            prompt = (
+                f"Your previous code raised an error. Fix it.\n\n"
+                f"Original question: {message}\n\n"
+                f"Failed code:\n{code}\n\n"
+                f"Error: {last_error}\n\n"
+                "Write corrected code only. No explanation."
+            )
 
+        try:
+            code_resp = await asyncio.to_thread(CODE_MODEL.generate_content, prompt)
+            code = _strip_fences(code_resp.text)
+        except Exception as e:
+            raise HTTPException(502, f"Code generation failed: {e}")
+
+        result_value = execute_safe(code, df)
+
+        if not isinstance(result_value, Exception):
+            break  # success — exit retry loop
+
+        last_error = str(result_value)
+
+    # ── All retries exhausted ─────────────────────────────────────────────────
     if isinstance(result_value, Exception):
+        print(f"[error] All {_MAX_RETRIES + 1} attempts failed. Last error: {last_error}")
         try:
             fallback = await asyncio.to_thread(
                 FORMAT_MODEL.generate_content,
                 f"Question: {message}\n\n"
-                "The data query could not be completed. Briefly apologize and suggest "
-                "the user try rephrasing their question.",
+                "The data query could not be completed after multiple attempts. "
+                "Briefly apologize and suggest the user try rephrasing.",
             )
-            return ChatResponse(answer=fallback.text, debug_code=raw_code)
+            return ChatResponse(answer=fallback.text, debug_code=code)
         except Exception:
             return ChatResponse(
                 answer="I wasn't able to answer that. Please try rephrasing your question.",
-                debug_code=raw_code,
+                debug_code=code,
             )
 
-    # ── Step 3: Format result as natural language ─────────────────────────────
+    # ── Format result as natural language ─────────────────────────────────────
     try:
+        truncated = _truncate_result(result_value)
         fmt_resp = await asyncio.to_thread(
             FORMAT_MODEL.generate_content,
-            f"User question: {message}\n\nRaw data result: {result_value!r}\n\nWrite a clear, friendly answer.",
+            f"User question: {message}\n\nRaw data result: {truncated!r}\n\nWrite a clear, friendly answer.",
         )
-        return ChatResponse(answer=fmt_resp.text, debug_code=raw_code)
+        return ChatResponse(answer=fmt_resp.text, debug_code=code)
     except Exception as e:
         raise HTTPException(502, f"Response formatting failed: {e}")
 
