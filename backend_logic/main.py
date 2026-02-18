@@ -146,6 +146,19 @@ result = (
     .head(5)
     .to_dicts()
 )
+
+### Sentiment Analysis
+Create a new column called sentiment that is a string that is either positive, negative, or neutral.
+User: What is the overall sentiment of the tweets?
+result = df["sentiment"].value_counts().to_dicts()
+
+### Sentiment Analysis for a specific brand
+User: What is the overall sentiment of the tweets for Pepsi?
+result = df.filter(pl.col("brand") == "Pepsi").["sentiment"].value_counts().to_dicts()
+
+### Sentiment Analysis for a specific brand
+User: What is the overall sentiment of the tweets for Pepsi?
+result = df.filter(pl.col("brand") == "Pepsi").["sentiment"].value_counts().to_dicts()
 """
 
 

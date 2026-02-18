@@ -1,5 +1,7 @@
 /* ── Reset ── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -7,14 +9,15 @@
 
 /* ── Base ── */
 :root {
-  --bg:      #0a0a0a;
+  --bg: #0a0a0a;
   --surface: #111111;
-  --text:    #f0f0f0;
-  --muted:   #888888;
-  --gold:    #c9a84c;
+  --text: #f0f0f0;
+  --muted: #888888;
+  --gold: #c9a84c;
 }
 
-html, body {
+html,
+body {
   height: 100%;
 }
 
@@ -66,6 +69,33 @@ body {
   opacity: 0.7;
 }
 
+/* ── Sponsors Footer ─────────────────────────────────────────────────────── */
+.sponsors {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 2rem 1.75rem;
+  border-top: 1px solid rgba(201, 168, 76, 0.1);
+  background: var(--surface);
+}
+
+.sponsors__label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.sponsors__img {
+  max-width: 380px;
+  width: 80%;
+  opacity: 0.55;
+  filter: grayscale(20%) brightness(0.88);
+}
+
 /* ── Chatbot Toggle Button ──────────────────────────────────────────────── */
 .chat-toggle {
   position: fixed;
@@ -85,6 +115,7 @@ body {
   transition: background 0.2s, transform 0.2s, color 0.2s;
   z-index: 1000;
 }
+
 .chat-toggle:hover {
   background: var(--gold);
   color: var(--bg);
@@ -111,6 +142,7 @@ body {
   transform: translateY(12px);
   transition: opacity 0.22s ease, transform 0.22s ease;
 }
+
 .chat-panel.is-open {
   opacity: 1;
   pointer-events: auto;
@@ -126,6 +158,7 @@ body {
   border-bottom: 1px solid rgba(201, 168, 76, 0.15);
   flex-shrink: 0;
 }
+
 .chat-panel__title {
   font-size: 0.7rem;
   font-weight: 600;
@@ -133,6 +166,7 @@ body {
   text-transform: uppercase;
   color: var(--gold);
 }
+
 .chat-panel__close {
   background: none;
   border: none;
@@ -144,7 +178,10 @@ body {
   border-radius: 4px;
   transition: color 0.15s;
 }
-.chat-panel__close:hover { color: var(--text); }
+
+.chat-panel__close:hover {
+  color: var(--text);
+}
 
 /* ── Message List ───────────────────────────────────────────────────────── */
 .chat-panel__messages {
@@ -167,7 +204,11 @@ body {
   line-height: 1.55;
   word-break: break-word;
 }
-.chat-msg p { margin: 0; }
+
+.chat-msg p {
+  margin: 0;
+}
+
 .chat-msg--bot {
   align-self: flex-start;
   background: #1a1a1a;
@@ -175,6 +216,7 @@ body {
   color: var(--text);
   border-bottom-left-radius: 0.15rem;
 }
+
 .chat-msg--user {
   align-self: flex-end;
   background: rgba(201, 168, 76, 0.1);
@@ -191,11 +233,13 @@ body {
   padding: 0.75rem 1rem;
   border-bottom-left-radius: 0.15rem;
 }
+
 .chat-loading-dots {
   display: flex;
   gap: 5px;
   align-items: center;
 }
+
 .chat-loading-dots span {
   width: 6px;
   height: 6px;
@@ -204,11 +248,28 @@ body {
   opacity: 0.4;
   animation: chatDotPulse 1.2s ease-in-out infinite;
 }
-.chat-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-.chat-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+.chat-loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.chat-loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
 @keyframes chatDotPulse {
-  0%, 80%, 100% { opacity: 0.4; transform: scale(0.85); }
-  40%           { opacity: 1;   transform: scale(1);    }
+
+  0%,
+  80%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ── Input Row ──────────────────────────────────────────────────────────── */
@@ -220,6 +281,7 @@ body {
   border-top: 1px solid rgba(201, 168, 76, 0.12);
   flex-shrink: 0;
 }
+
 .chat-panel__input {
   flex: 1;
   background: #1a1a1a;
@@ -233,10 +295,15 @@ body {
   outline: none;
   transition: border-color 0.15s;
 }
+
 .chat-panel__input:focus {
   border-color: rgba(201, 168, 76, 0.4);
 }
-.chat-panel__input::placeholder { color: var(--muted); }
+
+.chat-panel__input::placeholder {
+  color: var(--muted);
+}
+
 .chat-panel__send {
   background: none;
   border: 1px solid rgba(201, 168, 76, 0.35);
@@ -249,10 +316,12 @@ body {
   transition: background 0.15s, color 0.15s;
   flex-shrink: 0;
 }
+
 .chat-panel__send:hover {
   background: var(--gold);
   color: var(--bg);
 }
+
 .chat-panel__send:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -266,6 +335,7 @@ body {
     width: auto;
     bottom: 5.5rem;
   }
+
   .chat-toggle {
     right: 0.75rem;
     bottom: 1rem;
