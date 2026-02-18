@@ -2,6 +2,7 @@ import os
 import re
 import ast
 import asyncio
+import subprocess
 from collections import Counter
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -19,6 +20,7 @@ _REPO_ROOT = Path(__file__).parent.parent
 _ENV_PATH = Path(__file__).parent / ".env"
 _DATA_PATH = _REPO_ROOT / "backend_logic" / "data" / "final_dataset_cleaned_polars.csv"
 _FRONTEND_DIR = _REPO_ROOT / "frontend"
+_ANALYSIS_DIR = _REPO_ROOT / "backend_logic" / "data" / "analyis"
 
 load_dotenv(_ENV_PATH)
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
@@ -30,9 +32,42 @@ ROW_COUNT: int = 0
 SCHEMA_INFO: dict = {}
 CODE_MODEL = None
 FORMAT_MODEL = None
+DOCS_MODEL = None
 
 # Max code-gen retries before falling back to a graceful error message
 _MAX_RETRIES = 2
+
+
+# ── PDF text loader ───────────────────────────────────────────────────────────
+def _load_pdf_text(path: Path) -> str:
+    """Extract plain text from a PDF via pdftotext (poppler). Returns '' on failure."""
+    try:
+        result = subprocess.run(
+            ["pdftotext", str(path), "-"],
+            capture_output=True, text=True, timeout=30,
+        )
+        if result.returncode == 0:
+            return result.stdout
+        print(f"[startup] pdftotext error for {path.name}: {result.stderr[:120]}")
+    except FileNotFoundError:
+        print("[startup] pdftotext not found — install poppler to enable PDF Q&A")
+    except Exception as e:
+        print(f"[startup] Could not load PDF {path.name}: {e}")
+    return ""
+
+
+# Questions about named findings / methodology → skip code path, go straight to DOCS_MODEL
+_DOCS_TRIGGER_RE = re.compile(
+    r"\b(celebrity\s+flop|yell\s+index|geopolitical\s+hijack|narrative\s+hijack|"
+    r"efficiency\s+matrix|audience\s+archetype|viral\s+velocity|5.minute\s+window|"
+    r"wes\s+formula|weighted\s+engagement\s+(score\s+)?formula|"
+    r"recommendation|methodology|data\s+clean(ing)?|pipeline|"
+    r"white\s*paper|whitepaper|infographic|"
+    r"strategic\s+recommendation|conclusion|limitation|"
+    r"pepsi\s+paradox|narrative\s+ownership|geopolitical\s+liability|"
+    r"anomal(y|ies)|sentiment\s+geography|audience\s+archetype)\b",
+    re.IGNORECASE,
+)
 
 
 # ── System prompt builder ─────────────────────────────────────────────────────
@@ -165,7 +200,7 @@ result = df.filter(pl.col("brand") == "Pepsi").["sentiment"].value_counts().to_d
 # ── Lifespan ──────────────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global df, BRANDS, ROW_COUNT, SCHEMA_INFO, CODE_MODEL, FORMAT_MODEL
+    global df, BRANDS, ROW_COUNT, SCHEMA_INFO, CODE_MODEL, FORMAT_MODEL, DOCS_MODEL
 
     print(f"[startup] Loading dataset from {_DATA_PATH} ...")
     df = pl.read_csv(str(_DATA_PATH), infer_schema_length=5000, try_parse_dates=True)
@@ -189,6 +224,39 @@ async def lifespan(app: FastAPI):
             "(e.g. 'Pepsi Zero Sugar_1' becomes 'Pepsi Zero Sugar')."
         ),
     )
+
+    # ── Load analysis PDFs for document Q&A ───────────────────────────────────
+    whitepaper = _load_pdf_text(
+        _ANALYSIS_DIR / "10_32-NEW__Team_AI4U_GDAC_Whitepaper_FINAL (2).docx.pdf"
+    )
+    infographic = _load_pdf_text(
+        _ANALYSIS_DIR / "Beyond the Hype_ Decrypting the $8 Million Second _ Super Bowl LX Analytics.pdf"
+    )
+    docs_text = ""
+    if whitepaper:
+        docs_text += "=== WHITE PAPER ===\n" + whitepaper
+    if infographic:
+        docs_text += "\n\n=== INFOGRAPHIC ===\n" + infographic
+
+    if docs_text:
+        DOCS_MODEL = genai.GenerativeModel(
+            "gemini-2.5-flash",
+            system_instruction=(
+                "You are a research analyst assistant for the 2026 Super Bowl LX analytics project "
+                "by Team AI4U (Omid Zahrai, Nick Pardon, Parker DeYoung). "
+                "You have full access to two documents: a detailed white paper titled "
+                "'Beyond the Hype: Decrypting the $8 Million Second with AI & Viral Velocity' "
+                "and an infographic summarising the same analysis. "
+                "Answer questions based strictly on the content of these documents. "
+                "Be concise and precise. Cite specific findings, sections, or statistics when relevant. "
+                "When mentioning brand names, remove any trailing '_1' suffix. "
+                "Do not invent statistics not present in the documents.\n\n"
+                + docs_text
+            ),
+        )
+        print(f"[startup] PDF Q&A enabled ({len(docs_text):,} chars from whitepaper + infographic)")
+    else:
+        print("[startup] PDF Q&A disabled — no PDF content loaded")
 
     print(f"[startup] {ROW_COUNT:,} rows | {len(BRANDS)} brands | ready")
     yield
@@ -314,6 +382,18 @@ async def chat(req: ChatRequest):
     if not message:
         raise HTTPException(400, "Message cannot be empty.")
 
+    # ── Fast-path: named findings / methodology → go straight to DOCS_MODEL ───
+    if DOCS_MODEL is not None and _DOCS_TRIGGER_RE.search(message):
+        print(f"[docs] Question matches analysis trigger, routing to DOCS_MODEL")
+        try:
+            doc_resp = await asyncio.to_thread(
+                DOCS_MODEL.generate_content,
+                f"User question: {message}",
+            )
+            return ChatResponse(answer=doc_resp.text, debug_code=None)
+        except Exception as e:
+            print(f"[docs] DOCS_MODEL failed ({e}), falling through to code path")
+
     # ── Code generation with auto-retry on failure ────────────────────────────
     code: str | None = None
     result_value = None
@@ -345,9 +425,20 @@ async def chat(req: ChatRequest):
 
         last_error = str(result_value)
 
-    # ── All retries exhausted ─────────────────────────────────────────────────
+    # ── All retries exhausted — try DOCS_MODEL before giving up ──────────────
     if isinstance(result_value, Exception):
-        print(f"[error] All {_MAX_RETRIES + 1} attempts failed. Last error: {last_error}")
+        print(f"[info] Code path failed after {_MAX_RETRIES + 1} attempts, trying document Q&A")
+        if DOCS_MODEL is not None:
+            try:
+                doc_resp = await asyncio.to_thread(
+                    DOCS_MODEL.generate_content,
+                    f"User question: {message}",
+                )
+                return ChatResponse(answer=doc_resp.text, debug_code=code)
+            except Exception as doc_err:
+                print(f"[error] DOCS_MODEL also failed: {doc_err}")
+
+        # Final fallback: apologize and suggest rephrasing
         try:
             fallback = await asyncio.to_thread(
                 FORMAT_MODEL.generate_content,
