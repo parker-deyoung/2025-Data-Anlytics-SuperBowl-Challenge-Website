@@ -4,10 +4,10 @@ Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
 Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
 Chart.defaults.font.weight = '300';
 
-const GOLD       = '#c9a84c';
-const GOLD_MID   = 'rgba(201,168,76,0.5)';
-const GOLD_DIM   = 'rgba(201,168,76,0.28)';
-const MUTED_BAR  = 'rgba(240,240,240,0.18)';
+const GOLD = '#c9a84c';
+const GOLD_MID = 'rgba(201,168,76,0.5)';
+const GOLD_DIM = 'rgba(201,168,76,0.28)';
+const MUTED_BAR = 'rgba(240,240,240,0.18)';
 
 // ── 1. Brand Efficiency — horizontal bar (all 20 brands) ─────────────────
 (function () {
@@ -19,14 +19,14 @@ const MUTED_BAR  = 'rgba(240,240,240,0.18)';
   ];
   const values = [
     2505.5, 2166.2, 2097.3, 2039.2, 1011.3, 874.7, 854.1, 716.2,
-    518.5,  492.8,  464.0,  404.2,  402.9,  375.8, 286.1, 279.8,
-    238.1,  237.3,  225.9,  88.1,
+    518.5, 492.8, 464.0, 404.2, 402.9, 375.8, 286.1, 279.8,
+    238.1, 237.3, 225.9, 88.1,
   ];
 
   // Color bars by tier: top 4 = gold, next 4 = mid, rest = dim
   const colors = values.map((v) => {
     if (v >= 2000) return GOLD;
-    if (v >= 700)  return GOLD_MID;
+    if (v >= 700) return GOLD_MID;
     return GOLD_DIM;
   });
 
@@ -120,7 +120,7 @@ const MUTED_BAR  = 'rgba(240,240,240,0.18)';
       labels: ['Celebrity Mentions', 'Organic Content'],
       datasets: [{
         label: 'Avg Weighted Engagement Score',
-        data: [114.8, 611.4],
+        data: [439.9, 1702.8],
         backgroundColor: [MUTED_BAR, GOLD],
         borderRadius: 4,
         borderSkipped: false,
@@ -157,9 +157,9 @@ const MUTED_BAR  = 'rgba(240,240,240,0.18)';
 // ── 4. Yell Index — grouped bars ─────────────────────────────────────────
 // Shows ALL-CAPS vs normal-case avg likes; Amazon Ring is the sole outlier.
 (function () {
-  const brands   = ['Amazon Ring', 'Dove', 'Pepsi Zero Sugar', 'NFL', 'Liquid Death', 'Salesforce'];
-  const allCaps  = [179.5,  0.4,  0.3, 0.2, 0.1, 0.3];
-  const normal   = [ 10.4,  9.4, 23.7, 3.0, 5.6, 0.8];
+  const brands = ['Amazon Ring', 'Dove', 'Pepsi Zero Sugar', 'NFL', 'Liquid Death', 'Salesforce'];
+  const allCaps = [179.5, 0.4, 0.3, 0.2, 0.1, 0.3];
+  const normal = [10.4, 9.4, 23.7, 3.0, 5.6, 0.8];
 
   new Chart(document.getElementById('chartYell'), {
     type: 'bar',
