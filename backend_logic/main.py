@@ -163,11 +163,11 @@ async def lifespan(app: FastAPI):
     system_prompt = _build_code_system_prompt()
 
     CODE_MODEL = genai.GenerativeModel(
-        "gemini-2.0-flash",
+        "gemini-2.5-flash",
         system_instruction=system_prompt,
     )
     FORMAT_MODEL = genai.GenerativeModel(
-        "gemini-2.0-flash",
+        "gemini-2.5-flash",
         system_instruction=(
             "You are a friendly data analyst assistant. Given a user question and a raw query result, "
             "write a clear, concise 1-3 sentence answer in natural language. "
