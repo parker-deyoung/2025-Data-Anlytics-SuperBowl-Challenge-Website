@@ -549,6 +549,33 @@ h2.hero__subtitle {
   height: 520px;
 }
 
+/* ── Engagement Section ────────────────────────────────────────────────── */
+.engagement {
+  padding: 5rem 2rem;
+  background: var(--surface);
+  border-top: 1px solid rgba(201, 168, 76, 0.08);
+}
+
+.engagement__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.engagement__title {
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.engagement__sub {
+  font-size: 0.8rem;
+  font-weight: 300;
+  color: var(--muted);
+  margin-bottom: 2.5rem;
+}
+
 @media (max-width: 700px) {
   .charts__grid {
     grid-template-columns: 1fr;
