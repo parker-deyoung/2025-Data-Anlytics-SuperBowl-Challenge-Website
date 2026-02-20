@@ -40,6 +40,26 @@ function appendMessage(text, role) {
   return wrap;
 }
 
+function appendBotMessage(text, chartData) {
+  const wrap = document.createElement("div");
+  wrap.classList.add("chat-msg", "chat-msg--bot");
+  const p = document.createElement("p");
+  p.textContent = text;
+  wrap.appendChild(p);
+  if (chartData) {
+    const chartWrap = document.createElement("div");
+    chartWrap.className = "chat-chart-wrap";
+    const canvas = document.createElement("canvas");
+    chartWrap.appendChild(canvas);
+    wrap.appendChild(chartWrap);
+    // Slight delay to ensure element is in DOM before Chart.js measures it
+    setTimeout(() => { new Chart(canvas, chartData); }, 60);
+  }
+  chatMessages.appendChild(wrap);
+  scrollBottom();
+  return wrap;
+}
+
 function appendLoading() {
   const wrap = document.createElement("div");
   wrap.classList.add("chat-msg", "chat-msg--loading");
@@ -88,7 +108,7 @@ chatForm.addEventListener("submit", async (e) => {
 
     const data = await res.json();
     loadingEl.remove();
-    appendMessage(data.answer, "bot");
+    appendBotMessage(data.answer, data.chart_data || null);
   } catch (err) {
     loadingEl.remove();
     appendMessage("Sorry, I couldn't get an answer right now. Please try again.", "bot");

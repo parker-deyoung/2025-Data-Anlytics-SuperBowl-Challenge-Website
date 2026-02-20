@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import ast
@@ -33,12 +34,13 @@ SCHEMA_INFO: dict = {}
 CODE_MODEL = None
 FORMAT_MODEL = None
 DOCS_MODEL = None
+CHART_MODEL = None
 
 # Max code-gen retries before falling back to a graceful error message
 _MAX_RETRIES = 2
 
 
-# ── PDF text loader ───────────────────────────────────────────────────────────
+# ── File loaders ──────────────────────────────────────────────────────────────
 def _load_pdf_text(path: Path) -> str:
     """Extract plain text from a PDF via pdftotext (poppler). Returns '' on failure."""
     try:
@@ -56,7 +58,31 @@ def _load_pdf_text(path: Path) -> str:
     return ""
 
 
-# Questions about named findings / methodology → skip code path, go straight to DOCS_MODEL
+def _load_text_file(path: Path) -> str:
+    """Read a plain-text or markdown file. Returns '' on failure."""
+    try:
+        return path.read_text(encoding="utf-8")
+    except Exception as e:
+        print(f"[startup] Could not load {path.name}: {e}")
+    return ""
+
+
+def _load_html_text(path: Path) -> str:
+    """Strip <style>/<script> blocks and HTML tags from an HTML file. Returns plain text."""
+    try:
+        raw = path.read_text(encoding="utf-8")
+        raw = re.sub(r"<style[^>]*>.*?</style>", "", raw, flags=re.DOTALL | re.IGNORECASE)
+        raw = re.sub(r"<script[^>]*>.*?</script>", "", raw, flags=re.DOTALL | re.IGNORECASE)
+        raw = re.sub(r"<[^>]+>", " ", raw)
+        raw = re.sub(r"[ \t]+", " ", raw)
+        raw = re.sub(r"\n{3,}", "\n\n", raw)
+        return raw.strip()
+    except Exception as e:
+        print(f"[startup] Could not load HTML {path.name}: {e}")
+    return ""
+
+
+# Questions about named findings / methodology / analysis → go straight to DOCS_MODEL
 _DOCS_TRIGGER_RE = re.compile(
     r"\b(celebrity\s+flop|yell\s+index|geopolitical\s+hijack|narrative\s+hijack|"
     r"efficiency\s+matrix|audience\s+archetype|viral\s+velocity|5.minute\s+window|"
@@ -65,7 +91,21 @@ _DOCS_TRIGGER_RE = re.compile(
     r"white\s*paper|whitepaper|infographic|"
     r"strategic\s+recommendation|conclusion|limitation|"
     r"pepsi\s+paradox|narrative\s+ownership|geopolitical\s+liability|"
-    r"anomal(y|ies)|sentiment\s+geography|audience\s+archetype)\b",
+    r"anomal(y|ies)|sentiment\s+geography|audience\s+archetype|"
+    r"brand\s+battle|emoji\s+dna|n.?gram|top\s+phrase|hashtag\s+pattern|"
+    r"toxic|polariz|controversi|influencer|cohort|"
+    r"share\s+of\s+voice|temporal|timing\s+pattern|"
+    r"readability|flesch|grade\s+level|reading\s+level|"
+    r"geographic|location|sentiment\s+distribution|"
+    r"benchmark|finding|insight|pattern|key\s+takeaway|"
+    r"what\s+(did|does|were|are)\s+(the\s+)?(result|finding|conclusion|insight))\b",
+    re.IGNORECASE,
+)
+
+# Chart/graph requests → trigger chart generation alongside text answer
+_CHART_TRIGGER_RE = re.compile(
+    r"\b(chart|graph|plot|visuali[sz]e?|bar\s+chart|pie\s+chart|"
+    r"show\s+(me\s+)?(a\s+)?(chart|graph|plot|visual|breakdown))\b",
     re.IGNORECASE,
 )
 
@@ -204,7 +244,7 @@ Result: I cannot answer this query. Please provide a valid question.
 # ── Lifespan ──────────────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global df, BRANDS, ROW_COUNT, SCHEMA_INFO, CODE_MODEL, FORMAT_MODEL, DOCS_MODEL
+    global df, BRANDS, ROW_COUNT, SCHEMA_INFO, CODE_MODEL, FORMAT_MODEL, DOCS_MODEL, CHART_MODEL
 
     print(f"[startup] Loading dataset from {_DATA_PATH} ...")
     df = pl.read_csv(str(_DATA_PATH), infer_schema_length=5000, try_parse_dates=True)
@@ -229,18 +269,25 @@ async def lifespan(app: FastAPI):
         ),
     )
 
-    # ── Load analysis PDFs for document Q&A ───────────────────────────────────
+    # ── Load all analysis documents for document Q&A ──────────────────────────
     whitepaper = _load_pdf_text(
         _ANALYSIS_DIR / "10_32-NEW__Team_AI4U_GDAC_Whitepaper_FINAL (2).docx.pdf"
     )
-    infographic = _load_pdf_text(
+    infographic_pdf = _load_pdf_text(
         _ANALYSIS_DIR / "Beyond the Hype_ Decrypting the $8 Million Second _ Super Bowl LX Analytics.pdf"
     )
+    mega_dump = _load_text_file(_ANALYSIS_DIR / "GDAC_ALL_INSIGHTS_MEGA_DUMP.md")
+    infographic_html = _load_html_text(_ANALYSIS_DIR / "infographic.html")
+
     docs_text = ""
     if whitepaper:
         docs_text += "=== WHITE PAPER ===\n" + whitepaper
-    if infographic:
-        docs_text += "\n\n=== INFOGRAPHIC ===\n" + infographic
+    if infographic_pdf:
+        docs_text += "\n\n=== INFOGRAPHIC (PDF) ===\n" + infographic_pdf
+    if mega_dump:
+        docs_text += "\n\n=== GDAC ALL INSIGHTS MEGA DUMP ===\n" + mega_dump
+    if infographic_html:
+        docs_text += "\n\n=== INFOGRAPHIC (HTML TEXT) ===\n" + infographic_html
 
     if docs_text:
         DOCS_MODEL = genai.GenerativeModel(
@@ -248,19 +295,45 @@ async def lifespan(app: FastAPI):
             system_instruction=(
                 "You are a research analyst assistant for the 2026 Super Bowl LX analytics project "
                 "by Team AI4U (Omid Zahrai, Nick Pardon, Parker DeYoung). "
-                "You have full access to two documents: a detailed white paper titled "
-                "'Beyond the Hype: Decrypting the $8 Million Second with AI & Viral Velocity' "
-                "and an infographic summarising the same analysis. "
-                "Answer questions based strictly on the content of these documents. "
-                "Be concise and precise. Cite specific findings, sections, or statistics when relevant. "
-                "When mentioning brand names, remove any trailing '_1' suffix. "
+                "You have access to four knowledge sources: "
+                "(1) the full Team AI4U white paper 'Beyond the Hype: Decrypting the $8 Million Second with AI & Viral Velocity', "
+                "(2) the infographic PDF summary of the same analysis, "
+                "(3) the GDAC All Insights Mega Dump containing 100+ analytical patterns across all 20 brands, "
+                "and (4) the infographic HTML text with visualisation data. "
+                "Answer questions using all available sources. Be concise and precise. "
+                "Cite specific findings, numbers, or sections when relevant. "
+                "When brand names have a '_1' suffix, drop it in your answer. "
                 "Do not invent statistics not present in the documents.\n\n"
                 + docs_text
             ),
         )
-        print(f"[startup] PDF Q&A enabled ({len(docs_text):,} chars from whitepaper + infographic)")
+        print(f"[startup] Docs Q&A enabled ({len(docs_text):,} chars across all sources)")
     else:
-        print("[startup] PDF Q&A disabled — no PDF content loaded")
+        print("[startup] Docs Q&A disabled — no document content loaded")
+
+    # ── Chart generation model ─────────────────────────────────────────────────
+    CHART_MODEL = genai.GenerativeModel(
+        "gemini-2.5-flash",
+        system_instruction=(
+            "You generate Chart.js 4.x configuration JSON for a dark-themed analytics dashboard. "
+            "Given a user question and raw data, output ONLY a JSON object — no markdown fences, no explanation. "
+            "If the data is not suitable for charting, output the literal word null.\n\n"
+            "Required structure:\n"
+            '{"type":"bar","data":{"labels":[...],"datasets":[{"label":"...","data":[...],'
+            '"backgroundColor":"#c9a84c","borderRadius":3,"borderSkipped":false}]},'
+            '"options":{"responsive":true,"maintainAspectRatio":false,'
+            '"plugins":{"legend":{"labels":{"color":"#888","font":{"size":11}}}},'
+            '"scales":{"x":{"grid":{"color":"rgba(255,255,255,0.04)"},"ticks":{"color":"#666","font":{"size":11}},'
+            '"border":{"color":"transparent"}},"y":{"grid":{"display":false},'
+            '"ticks":{"color":"#aaa","font":{"size":11}},"border":{"color":"transparent"}}}}}\n\n'
+            "Design rules:\n"
+            "- Use indexAxis:'y' for bar charts with more than 5 labels (horizontal bars read better)\n"
+            "- Primary color: #c9a84c (gold). Secondary: rgba(201,168,76,0.28). Muted: rgba(240,240,240,0.18)\n"
+            "- For multi-brand comparisons, use an array of colors (gold for top/winner, dim for others)\n"
+            "- Supported types: bar, doughnut. Keep labels concise (under 20 chars).\n"
+            "- Output raw JSON only — no markdown, no explanation, no surrounding text."
+        ),
+    )
 
     print(f"[startup] {ROW_COUNT:,} rows | {len(BRANDS)} brands | ready")
     yield
@@ -369,6 +442,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     debug_code: str | None = None
+    chart_data: dict | None = None
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -458,15 +532,35 @@ async def chat(req: ChatRequest):
             )
 
     # ── Format result as natural language ─────────────────────────────────────
+    truncated = _truncate_result(result_value)
     try:
-        truncated = _truncate_result(result_value)
         fmt_resp = await asyncio.to_thread(
             FORMAT_MODEL.generate_content,
             f"User question: {message}\n\nRaw data result: {truncated!r}\n\nWrite a clear, friendly answer.",
         )
-        return ChatResponse(answer=fmt_resp.text, debug_code=code)
+        answer_text = fmt_resp.text
     except Exception as e:
         raise HTTPException(502, f"Response formatting failed: {e}")
+
+    # ── Optionally generate a Chart.js config if user asked for a chart ────────
+    chart_data: dict | None = None
+    if _CHART_TRIGGER_RE.search(message) and CHART_MODEL is not None:
+        try:
+            chart_resp = await asyncio.to_thread(
+                CHART_MODEL.generate_content,
+                f"User question: {message}\n\nData: {truncated!r}",
+            )
+            raw_chart = chart_resp.text.strip()
+            # Strip any accidental markdown fences the model may add
+            raw_chart = re.sub(r"^```[a-z]*\n?", "", raw_chart, flags=re.IGNORECASE)
+            raw_chart = re.sub(r"\n?```\s*$", "", raw_chart).strip()
+            if raw_chart and raw_chart.lower() != "null":
+                chart_data = json.loads(raw_chart)
+        except Exception as chart_err:
+            print(f"[chart] Chart generation failed: {chart_err}")
+            chart_data = None
+
+    return ChatResponse(answer=answer_text, debug_code=code, chart_data=chart_data)
 
 
 # ── Static files (MUST be declared last) ─────────────────────────────────────
