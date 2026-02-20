@@ -590,6 +590,53 @@ h2.hero__subtitle {
   }
 }
 
+/* ── Citations / References ─────────────────────────────────────────────── */
+.citations {
+  padding: 4rem 2rem;
+  background: var(--bg);
+  border-top: 1px solid rgba(201, 168, 76, 0.08);
+}
+
+.citations__inner {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.citations__list {
+  list-style: none;
+  counter-reset: cite;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 0;
+  margin-top: 0;
+}
+
+.citations__list li {
+  counter-increment: cite;
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  font-weight: 300;
+  color: rgba(240, 240, 240, 0.42);
+  line-height: 1.65;
+}
+
+.citations__list li::before {
+  content: "[" counter(cite) "]";
+  font-size: 0.63rem;
+  font-weight: 600;
+  color: rgba(201, 168, 76, 0.48);
+  padding-top: 0.12rem;
+  white-space: nowrap;
+}
+
+.citations__list li em {
+  font-style: italic;
+  color: rgba(240, 240, 240, 0.58);
+}
+
 /* ── Sponsors Footer ─────────────────────────────────────────────────────── */
 .sponsors {
   display: flex;
