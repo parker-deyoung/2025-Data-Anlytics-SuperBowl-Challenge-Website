@@ -569,11 +569,66 @@ h2.hero__subtitle {
   margin-bottom: 0.25rem;
 }
 
-.engagement__sub {
-  font-size: 0.8rem;
+/* ── WES Formula Display ───────────────────────────────────────────────── */
+.wes-formula {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.wes-lhs {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+}
+
+.wes-eq {
+  font-size: 1.1rem;
   font-weight: 300;
   color: var(--muted);
-  margin-bottom: 2.5rem;
+  padding: 0 0.25rem;
+}
+
+.wes-terms {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.wes-term {
+  background: var(--bg);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: 0.375rem;
+  padding: 0.45rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.wes-metric {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.wes-weight {
+  font-size: 0.82rem;
+  font-weight: 300;
+  color: var(--gold);
+}
+
+.wes-op {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 300;
+  padding: 0 0.1rem;
 }
 
 @media (max-width: 700px) {
@@ -598,25 +653,26 @@ h2.hero__subtitle {
 }
 
 .citations__inner {
-  max-width: 780px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
 .citations__list {
   list-style: none;
   counter-reset: cite;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
+  columns: 2;
+  column-gap: 3rem;
   padding: 0;
   margin-top: 0;
 }
 
 .citations__list li {
   counter-increment: cite;
-  display: grid;
-  grid-template-columns: 2rem 1fr;
-  gap: 0.4rem;
+  display: block;
+  position: relative;
+  padding-left: 2.5rem;
+  break-inside: avoid;
+  margin-bottom: 0.95rem;
   font-size: 0.76rem;
   font-weight: 300;
   color: rgba(240, 240, 240, 0.42);
@@ -625,16 +681,24 @@ h2.hero__subtitle {
 
 .citations__list li::before {
   content: "[" counter(cite) "]";
+  position: absolute;
+  left: 0;
+  top: 0;
   font-size: 0.63rem;
   font-weight: 600;
   color: rgba(201, 168, 76, 0.48);
-  padding-top: 0.12rem;
   white-space: nowrap;
 }
 
 .citations__list li em {
   font-style: italic;
   color: rgba(240, 240, 240, 0.58);
+}
+
+@media (max-width: 700px) {
+  .citations__list {
+    columns: 1;
+  }
 }
 
 /* ── Sponsors Footer ─────────────────────────────────────────────────────── */

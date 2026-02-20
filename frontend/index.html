@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=5" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 </head>
 
@@ -191,8 +191,36 @@
     <div class="engagement__inner">
       <span class="section-eyebrow">Engagement Equation</span>
       <h2 class="engagement__title">Weighted Engagement Score (WES)</h2>
-      <p class="engagement__sub">WES = (Retweet × 0.2) + (Reply × 0.2) + (Like × 0.1) + (Quote × 0.2) + (Bookmark × 0.2)
-      </p>
+      <div class="wes-formula">
+        <span class="wes-lhs">WES</span>
+        <span class="wes-eq">=</span>
+        <div class="wes-terms">
+          <div class="wes-term">
+            <span class="wes-metric">Retweet</span>
+            <span class="wes-weight">× 0.2</span>
+          </div>
+          <span class="wes-op">+</span>
+          <div class="wes-term">
+            <span class="wes-metric">Reply</span>
+            <span class="wes-weight">× 0.2</span>
+          </div>
+          <span class="wes-op">+</span>
+          <div class="wes-term">
+            <span class="wes-metric">Like</span>
+            <span class="wes-weight">× 0.1</span>
+          </div>
+          <span class="wes-op">+</span>
+          <div class="wes-term">
+            <span class="wes-metric">Quote</span>
+            <span class="wes-weight">× 0.2</span>
+          </div>
+          <span class="wes-op">+</span>
+          <div class="wes-term">
+            <span class="wes-metric">Bookmark</span>
+            <span class="wes-weight">× 0.2</span>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -405,8 +433,8 @@
     </form>
   </aside>
 
-  <script src="js/main.js?v=4"></script>
-  <script src="js/charts.js?v=4"></script>
+  <script src="js/main.js?v=5"></script>
+  <script src="js/charts.js?v=5"></script>
 </body>
 
 </html>
