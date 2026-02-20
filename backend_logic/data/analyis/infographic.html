@@ -1650,7 +1650,8 @@
       }
 
       .funnel-bar-inner {
-        width: attr(data-width %) !important
+        /* No need for attr(); use the variable directly */
+        width: var(--width) !important;
       }
 
       /* Body background */
@@ -1837,7 +1838,8 @@
           class="m">Like</span> <span class="op">&times;</span> <span class="w">0.1</span>) <span class="op">+</span>
         (<span class="m">Quote</span> <span class="op">&times;</span> <span class="w">0.2</span>) <span
           class="op">+</span> (<span class="m">Bookmark</span> <span class="op">&times;</span> <span
-          class="w">0.2</span>)</div>
+          class="w">0.2</span>)
+      </div>
     </div>
   </section>
 

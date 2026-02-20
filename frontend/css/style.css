@@ -21,6 +21,10 @@ body {
   height: 100%;
 }
 
+canvas {
+  display: block;
+}
+
 body {
   background-color: var(--bg);
   color: var(--text);
@@ -67,6 +71,23 @@ body {
   background: var(--gold);
   margin: 2rem auto 0;
   opacity: 0.7;
+}
+
+/* ── Hero Subtitle ───────────────────────────────────────────────────────── */
+h2.hero__subtitle {
+  font-size: 1rem;
+  font-weight: 400;
+  color: rgba(201, 168, 76, 0.72);
+  letter-spacing: 0.03em;
+  margin-top: 1.5rem;
+}
+
+.hero__subtitle {
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: rgba(240, 240, 240, 0.5);
+  margin-top: 0.55rem;
+  line-height: 1.65;
 }
 
 /* ── Data Strip ─────────────────────────────────────────────────────────── */
@@ -117,6 +138,315 @@ body {
   height: 2.25rem;
   background: rgba(201, 168, 76, 0.15);
   flex-shrink: 0;
+}
+
+/* ── Data Pipeline Funnel ───────────────────────────────────────────────── */
+.pipeline {
+  padding: 4rem 2rem;
+  background: var(--bg);
+  border-top: 1px solid rgba(201, 168, 76, 0.08);
+}
+
+.pipeline__inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.funnel__row {
+  display: grid;
+  grid-template-columns: 180px 1fr 50px;
+  align-items: center;
+  gap: 1rem;
+}
+
+.funnel__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+  line-height: 1.4;
+}
+
+.funnel__label em {
+  display: block;
+  font-style: normal;
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--muted);
+  margin-top: 0.1rem;
+}
+
+.funnel__track {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.funnel__bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1.2s ease;
+}
+
+.funnel__bar--raw {
+  width: 100%;
+  background: var(--gold);
+}
+
+.funnel__bar--clean {
+  width: 0;
+  background: rgba(201, 168, 76, 0.55);
+}
+
+.funnel__pct {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.funnel__note {
+  margin-top: 1.5rem;
+  font-size: 0.78rem;
+  font-weight: 300;
+  color: rgba(240, 240, 240, 0.45);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+/* ── Narrative Ownership Taxonomy ───────────────────────────────────────── */
+.taxonomy {
+  padding: 5rem 2rem;
+  background: var(--surface);
+  border-top: 1px solid rgba(201, 168, 76, 0.08);
+}
+
+.taxonomy__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.taxonomy__title {
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.taxonomy__sub {
+  font-size: 0.8rem;
+  font-weight: 300;
+  color: var(--muted);
+  margin-bottom: 2.5rem;
+}
+
+.taxonomy__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.taxonomy__col {
+  background: var(--bg);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+.taxonomy__col-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.taxonomy__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.taxonomy__dot--owned {
+  background: var(--gold);
+}
+
+.taxonomy__dot--borrowed {
+  background: rgba(240, 240, 240, 0.4);
+}
+
+.taxonomy__dot--hijacked {
+  background: rgba(255, 80, 80, 0.7);
+}
+
+.taxonomy__col-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.taxonomy__col--owned .taxonomy__col-label {
+  color: var(--gold);
+}
+
+.taxonomy__col--borrowed .taxonomy__col-label {
+  color: rgba(240, 240, 240, 0.5);
+}
+
+.taxonomy__col--hijacked .taxonomy__col-label {
+  color: rgba(255, 80, 80, 0.7);
+}
+
+.taxonomy__col-desc {
+  font-size: 0.72rem;
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+.taxonomy__rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.taxonomy__row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.55rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.taxonomy__brand {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.85;
+}
+
+.taxonomy__phrase {
+  font-size: 0.72rem;
+  font-weight: 300;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.taxonomy__count {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── Correlation Matrix ──────────────────────────────────────────────────── */
+.matrix-wrap {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.matrix-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  min-width: 480px;
+}
+
+.matrix-tbl th {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  padding: 0.5rem 0.6rem;
+  white-space: nowrap;
+}
+
+.matrix-tbl tbody th {
+  text-align: right;
+  padding-right: 0.75rem;
+}
+
+.matrix-tbl td {
+  text-align: center;
+  padding: 0.55rem 0.6rem;
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.15s;
+}
+
+.matrix-tbl td:hover {
+  transform: scale(1.1);
+}
+
+.mc-diag {
+  background: rgba(201, 168, 76, 0.85);
+  color: #000;
+  font-weight: 600;
+}
+
+.mc-hi {
+  background: rgba(201, 168, 76, 0.22);
+  color: var(--text);
+}
+
+.mc-mid {
+  background: rgba(201, 168, 76, 0.1);
+  color: rgba(240, 240, 240, 0.7);
+}
+
+.mc-low {
+  background: rgba(201, 168, 76, 0.05);
+  color: var(--muted);
+}
+
+.mc-zero {
+  background: rgba(255, 80, 80, 0.1);
+  color: rgba(255, 80, 80, 0.8);
+}
+
+.matrix-note {
+  font-size: 0.75rem;
+  font-weight: 300;
+  color: rgba(240, 240, 240, 0.45);
+  line-height: 1.6;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+/* ── Extra chart wrap heights ────────────────────────────────────────────── */
+.chart-card__wrap--lg {
+  height: 420px;
+}
+
+.chart-card__wrap--xl {
+  height: 620px;
+}
+
+/* ── Pipeline eyebrow spacing override ──────────────────────────────────── */
+.pipeline .section-eyebrow {
+  margin-bottom: 1.5rem;
+}
+
+/* ── Taxonomy + funnel responsive ───────────────────────────────────────── */
+@media (max-width: 700px) {
+  .taxonomy__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .funnel__row {
+    grid-template-columns: 110px 1fr 40px;
+  }
 }
 
 /* ── Key Findings ────────────────────────────────────────────────────────── */
@@ -220,9 +550,17 @@ body {
 }
 
 @media (max-width: 700px) {
-  .charts__grid { grid-template-columns: 1fr; }
-  .chart-card--wide { grid-column: 1; }
-  .chart-card__wrap--tall { height: 600px; }
+  .charts__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-card--wide {
+    grid-column: 1;
+  }
+
+  .chart-card__wrap--tall {
+    height: 600px;
+  }
 }
 
 /* ── Sponsors Footer ─────────────────────────────────────────────────────── */
@@ -485,9 +823,18 @@ body {
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .data-strip__divider { display: none; }
-  .data-strip__inner { gap: 1.25rem; }
-  .data-stat { padding: 0 1rem; min-width: 30%; }
+  .data-strip__divider {
+    display: none;
+  }
+
+  .data-strip__inner {
+    gap: 1.25rem;
+  }
+
+  .data-stat {
+    padding: 0 1rem;
+    min-width: 30%;
+  }
 }
 
 @media (max-width: 480px) {

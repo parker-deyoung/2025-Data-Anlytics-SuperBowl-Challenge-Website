@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=3" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 </head>
 
@@ -53,6 +53,31 @@
     </div>
   </section>
 
+  <!-- ── Data Pipeline Funnel ── -->
+  <section class="pipeline">
+    <div class="pipeline__inner">
+      <span class="section-eyebrow">Data Pipeline</span>
+      <div class="funnel">
+        <div class="funnel__row">
+          <span class="funnel__label">Raw Dataset<em>65,186 rows</em></span>
+          <div class="funnel__track">
+            <div class="funnel__bar funnel__bar--raw" style="width:100%"></div>
+          </div>
+          <span class="funnel__pct">100%</span>
+        </div>
+        <div class="funnel__row">
+          <span class="funnel__label">After Deduplication<em>46,257 verified tweets</em></span>
+          <div class="funnel__track">
+            <div class="funnel__bar funnel__bar--clean" data-width="70.97"></div>
+          </div>
+          <span class="funnel__pct">70.97%</span>
+        </div>
+      </div>
+      <p class="funnel__note">18,929 exact-duplicate bot retweets removed — retaining them would have inflated brand
+        volume metrics by up to 41%.</p>
+    </div>
+  </section>
+
   <!-- ── Key Findings ── -->
   <section class="findings">
     <div class="findings__inner">
@@ -88,6 +113,79 @@
     </div>
   </section>
 
+  <!-- ── Narrative Ownership Taxonomy ── -->
+  <section class="taxonomy">
+    <div class="taxonomy__inner">
+      <span class="section-eyebrow">Conversation Analysis</span>
+      <h2 class="taxonomy__title">Narrative Ownership Taxonomy</h2>
+      <p class="taxonomy__sub">Owned, Event-Borrowed, and Hijacked Conversations</p>
+      <div class="taxonomy__grid">
+
+        <div class="taxonomy__col taxonomy__col--owned">
+          <div class="taxonomy__col-header">
+            <span class="taxonomy__dot taxonomy__dot--owned"></span>
+            <span class="taxonomy__col-label">Owned</span>
+          </div>
+          <p class="taxonomy__col-desc">Top phrase directly reflects the brand's product or campaign.</p>
+          <div class="taxonomy__rows">
+            <div class="taxonomy__row"><span class="taxonomy__brand">Pepsi Zero Sugar</span><span
+                class="taxonomy__phrase">"love pepsi"</span><span class="taxonomy__count">516</span></div>
+            <div class="taxonomy__row"><span class="taxonomy__brand">Michelob ULTRA</span><span
+                class="taxonomy__phrase">"ultrarace sweepstakes"</span><span class="taxonomy__count">492</span></div>
+            <div class="taxonomy__row"><span class="taxonomy__brand">Blue Square</span><span
+                class="taxonomy__phrase">"bad bunny"</span><span class="taxonomy__count">289</span></div>
+            <div class="taxonomy__row"><span class="taxonomy__brand">DraftKings</span><span
+                class="taxonomy__phrase">"million dollars"</span><span class="taxonomy__count">218</span></div>
+            <div class="taxonomy__row"><span class="taxonomy__brand">Budweiser</span><span
+                class="taxonomy__phrase">"clydesdale"</span><span class="taxonomy__count">189</span></div>
+          </div>
+        </div>
+
+        <div class="taxonomy__col taxonomy__col--borrowed">
+          <div class="taxonomy__col-header">
+            <span class="taxonomy__dot taxonomy__dot--borrowed"></span>
+            <span class="taxonomy__col-label">Event-Borrowed</span>
+          </div>
+          <p class="taxonomy__col-desc">Top phrase references the event, not the product. Visibility without equity.</p>
+          <div class="taxonomy__rows">
+            <div class="taxonomy__row"><span class="taxonomy__brand">NFL</span><span class="taxonomy__phrase">"super
+                bowl"</span><span class="taxonomy__count">268</span></div>
+            <div class="taxonomy__row"><span class="taxonomy__brand">Salesforce</span><span
+                class="taxonomy__phrase">"halftime show"</span><span class="taxonomy__count">246</span></div>
+            <div class="taxonomy__row"><span class="taxonomy__brand">Instacart</span><span
+                class="taxonomy__phrase">"winter olympics"</span><span class="taxonomy__count">168</span></div>
+            <div class="taxonomy__row"><span class="taxonomy__brand">Dove</span><span class="taxonomy__phrase">"super
+                bowl"</span><span class="taxonomy__count">166</span></div>
+            <div class="taxonomy__row"><span class="taxonomy__brand">Google</span><span class="taxonomy__phrase">"super
+                bowl"</span><span class="taxonomy__count">145</span></div>
+          </div>
+        </div>
+
+        <div class="taxonomy__col taxonomy__col--hijacked">
+          <div class="taxonomy__col-header">
+            <span class="taxonomy__dot taxonomy__dot--hijacked"></span>
+            <span class="taxonomy__col-label">Hijacked</span>
+          </div>
+          <p class="taxonomy__col-desc">Top phrase is unrelated — conversation co-opted by political or cultural forces.
+          </p>
+          <div class="taxonomy__rows">
+            <div class="taxonomy__row"><span class="taxonomy__brand">State Farm</span><span
+                class="taxonomy__phrase">"kid rock"</span><span class="taxonomy__count">1,280</span></div>
+            <div class="taxonomy__row"><span class="taxonomy__brand">Amazon Ring</span><span
+                class="taxonomy__phrase">"your government"</span><span class="taxonomy__count">334</span></div>
+            <div class="taxonomy__row"><span class="taxonomy__brand">Ro</span><span class="taxonomy__phrase">"weight
+                loss"</span><span class="taxonomy__count">203</span></div>
+            <div class="taxonomy__row"><span class="taxonomy__brand">Liquid Death</span><span
+                class="taxonomy__phrase">"your head"</span><span class="taxonomy__count">138</span></div>
+            <div class="taxonomy__row"><span class="taxonomy__brand">Lay's</span><span class="taxonomy__phrase">"anti
+                american"</span><span class="taxonomy__count">76</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- ── Interactive Charts ── -->
   <section class="charts">
     <div class="charts__inner">
@@ -119,12 +217,108 @@
           </div>
         </div>
 
-        <!-- Yell Index — full width -->
+        <!-- Yell Index — full width, all 20 brands -->
         <div class="chart-card chart-card--wide">
-          <p class="chart-card__label">The Yell Index — Avg Likes: ALL-CAPS vs. Normal-Case Tweets</p>
-          <div class="chart-card__wrap">
+          <p class="chart-card__label">The Yell Index — Avg Likes: ALL-CAPS vs. Normal-Case Tweets (All 20 Brands)</p>
+          <div class="chart-card__wrap chart-card__wrap--xl">
             <canvas id="chartYell"></canvas>
           </div>
+        </div>
+
+        <!-- Audience Archetype Scatter — full width -->
+        <div class="chart-card chart-card--wide">
+          <p class="chart-card__label">Audience Archetype Matrix — Reading Level vs. Visual Content Preference</p>
+          <div class="chart-card__wrap chart-card__wrap--lg">
+            <canvas id="chartArchetype"></canvas>
+          </div>
+        </div>
+
+        <!-- Visual Content Effect — full width -->
+        <div class="chart-card chart-card--wide">
+          <p class="chart-card__label">The Counter-Intuitive Visual Effect — Avg Retweets: Visual vs. Text-Only (All 20
+            Brands)</p>
+          <div class="chart-card__wrap chart-card__wrap--xl">
+            <canvas id="chartVisualEffect"></canvas>
+          </div>
+        </div>
+
+        <!-- Correlation Matrix — full width, HTML table -->
+        <div class="chart-card chart-card--wide" id="matrixCard">
+          <p class="chart-card__label">Engagement Metric Correlation Matrix — Retweets Are Independent of All Other
+            Signals</p>
+          <div class="matrix-wrap">
+            <table class="matrix-tbl">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Retweets</th>
+                  <th>Replies</th>
+                  <th>Likes</th>
+                  <th>Quotes</th>
+                  <th>Bookmarks</th>
+                  <th>Impressions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>Retweets</th>
+                  <td class="mc-diag">1.000</td>
+                  <td class="mc-zero">-0.002</td>
+                  <td class="mc-zero">-0.005</td>
+                  <td class="mc-zero">-0.005</td>
+                  <td class="mc-zero">-0.005</td>
+                  <td class="mc-zero">-0.006</td>
+                </tr>
+                <tr>
+                  <th>Replies</th>
+                  <td class="mc-zero">-0.002</td>
+                  <td class="mc-diag">1.000</td>
+                  <td class="mc-mid">0.349</td>
+                  <td class="mc-hi">0.857</td>
+                  <td class="mc-low">0.176</td>
+                  <td class="mc-mid">0.409</td>
+                </tr>
+                <tr>
+                  <th>Likes</th>
+                  <td class="mc-zero">-0.005</td>
+                  <td class="mc-mid">0.349</td>
+                  <td class="mc-diag">1.000</td>
+                  <td class="mc-hi">0.588</td>
+                  <td class="mc-hi">0.796</td>
+                  <td class="mc-hi">0.872</td>
+                </tr>
+                <tr>
+                  <th>Quotes</th>
+                  <td class="mc-zero">-0.005</td>
+                  <td class="mc-hi">0.857</td>
+                  <td class="mc-hi">0.588</td>
+                  <td class="mc-diag">1.000</td>
+                  <td class="mc-mid">0.392</td>
+                  <td class="mc-hi">0.655</td>
+                </tr>
+                <tr>
+                  <th>Bookmarks</th>
+                  <td class="mc-zero">-0.005</td>
+                  <td class="mc-low">0.176</td>
+                  <td class="mc-hi">0.796</td>
+                  <td class="mc-mid">0.392</td>
+                  <td class="mc-diag">1.000</td>
+                  <td class="mc-hi">0.656</td>
+                </tr>
+                <tr>
+                  <th>Impressions</th>
+                  <td class="mc-zero">-0.006</td>
+                  <td class="mc-mid">0.409</td>
+                  <td class="mc-hi">0.872</td>
+                  <td class="mc-hi">0.655</td>
+                  <td class="mc-hi">0.656</td>
+                  <td class="mc-diag">1.000</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="matrix-note">Retweets are independent of all other engagement signals (r &lt; 0.01 for all pairs). A
+            tweet can be retweeted thousands of times without accumulating a single like, reply, or bookmark.</p>
         </div>
 
       </div>
@@ -179,8 +373,8 @@
     </form>
   </aside>
 
-  <script src="js/main.js"></script>
-  <script src="js/charts.js"></script>
+  <script src="js/main.js?v=3"></script>
+  <script src="js/charts.js?v=3"></script>
 </body>
 
 </html>
